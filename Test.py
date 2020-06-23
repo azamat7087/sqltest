@@ -53,8 +53,10 @@ def casino():
             time.sleep(1)
 
         if number == 1:
-            print("You won 10$!")
-            sql.execute(f'UPDATE users SET cash = {randint(0,100)}')
+            prise_money = randint(0,100)
+            print("You won {} $!".format(prise_money))
+            sql.execute(f'UPDATE users SET cash = {prise_money} WHERE login = "{user_login}"')
+            db.commit()
         else:
             print("You lose!")
 
