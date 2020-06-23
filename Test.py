@@ -19,7 +19,7 @@ def reg():
 
     sql.execute(f"SELECT login FROM users WHERE login = '{users_login}'")
     if sql.fetchone() is None:
-        sql.execute(f"INSERT INTO users VALUES(?, ?, ?)", (users_login, users_password, 0))
+        sql.execute(f"INSERT INTO users VALUES(?, ?, ?)", (users_login, users_password, randint(0, 120)))
         db.commit()
         print("Registration complete!")
         answer = input("Do you want to play casino? Y/N: ")
