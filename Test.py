@@ -6,6 +6,8 @@ import  time
 db = sqlite3.connect('server.db')
 sql = db.cursor()
 
+
+
 sql.execute("""CREATE TABLE  IF NOT EXISTS users (
                 login TEXT,
                 password TEXT,
@@ -19,7 +21,7 @@ def reg():
 
     sql.execute(f"SELECT login FROM users WHERE login = '{users_login}'")
     if sql.fetchone() is None:
-        sql.execute(f"INSERT INTO users VALUES(?, ?, ?)", (users_login, users_password, randint(0, 120)))
+        sql.execute(f"INSERT INTO users VALUES(?, ?, ?)", (users_login, users_password, 100))
         db.commit()
         print("Registration complete!")
         answer = input("Do you want to play casino? Y/N: ")
@@ -74,14 +76,21 @@ def casino():
                 print("You won {} $!".format(prise_money))
                 sql.execute(f'UPDATE users SET cash = {prise_money + balance} WHERE login = "{user_login}"')
                 db.commit()
-            else:
-                print("You lose!")
 
-                answer = input("Do you want to delete your account? Y/N: ")
-                if answer == "Y":
+            else:
+
+                for i in sql.execute(f"SELECT cash FROM users WHERE login='{user_login}'"):
+                    lose_money = i[0] - randint(0, i[0])
+                print("You lose {}$ !".format(lose_money))
+                sql.execute(f'UPDATE users SET cash = {balance - lose_money} WHERE login = "{user_login}"')
+                db.commit()
+
+                sql.execute(f"SELECT cash FROM users WHERE login='{user_login}'")
+                if sql.fetchone()[0] <= 0:
+                    print("Your balance is 0$.Your account will be deleted")
                     delete_db()
-                else:
-                    print("Ok")
+
+
 
 
 casino()
