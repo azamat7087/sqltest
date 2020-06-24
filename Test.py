@@ -47,17 +47,22 @@ def casino():
         else:
             print("Ok")
     else:
-        print("Playing game...")
-        for i in range(1, 4):
-            print(i)
-            time.sleep(1)
-
-        if number == 1:
-            prise_money = randint(0,100)
-            print("You won {} $!".format(prise_money))
-            sql.execute(f'UPDATE users SET cash = {prise_money} WHERE login = "{user_login}"')
-            db.commit()
+        user_password = input("Enter password: ")#
+        sql.execute(f"SELECT password,login FROM users WHERE login='{user_login}', password = '{user_password}'")#\
+        if sql.fetchone() is None:
+            print("Not correct")
         else:
-            print("You lose!")
+            print("Playing game...")
+            for i in range(1, 4):
+                print(i)
+                time.sleep(1)
+
+            if number == 1:
+                prise_money = randint(0,100)
+                print("You won {} $!".format(prise_money))
+                sql.execute(f'UPDATE users SET cash = {prise_money} WHERE login = "{user_login}"')
+                db.commit()
+            else:
+                print("You lose!")
 
 casino()
