@@ -6,7 +6,13 @@ import  time
 db = sqlite3.connect('server.db')
 sql = db.cursor()
 
-
+db_blacklist = sqlite3.connect('blacklist.db')
+sql_blacklist = db_blacklist.cursor()
+sql_blacklist.execute("""CREATE TABLE IF NOT EXISTS blacklist (
+                        login TEXT,
+                        in_blacklist INT
+                    )""")
+db_blacklist.commit()
 
 sql.execute("""CREATE TABLE  IF NOT EXISTS users (
                 login TEXT,
@@ -18,23 +24,27 @@ db.commit()
 def reg():
     users_login = input("Login: ")
     users_password = input("Password: ")
-
-    sql.execute(f"SELECT login FROM users WHERE login = '{users_login}'")
-    if sql.fetchone() is None:
-        sql.execute(f"INSERT INTO users VALUES(?, ?, ?)", (users_login, users_password, 100))
-        db.commit()
-        print("Registration complete!")
-        answer = input("Do you want to play casino? Y/N: ")
-        if answer == 'Y':
-            print("Good luck!")
-            casino()
+    if sql_blacklist.execute(f"SELECT in_blacklist FROM blacklist WHERE login='user_login'") == 0:
+        sql.execute(f"SELECT login FROM users WHERE login = '{users_login}'")
+        if sql.fetchone() is None:
+            sql.execute(f"INSERT INTO users VALUES(?, ?, ?)", (users_login, users_password, 100))
+            sql_blacklist.execute(f"INSERT INTO blacklist VALUES(?, ?)", (users_login,0))
+            db_blacklist.commit()
+            db.commit()
+            print("Registration complete!")
+            answer = input("Do you want to play casino? Y/N: ")
+            if answer == 'Y':
+                print("Good luck!")
+                casino()
+            else:
+                print("Ok")
         else:
-            print("Ok")
-    else:
-        print("This person is aready registrated ")
+            print("This person is aready registrated")
 
-        for value in sql.execute("SELECT * FROM users"):
-            print(value[0])
+            for value in sql.execute("SELECT * FROM users"):
+                print(value[0])
+    else:
+        print("You are in blacklist!")
 
 
 def delete_db():
@@ -62,7 +72,7 @@ def casino():
     else:
         user_password = input("Enter password: ")#
 
-        if sql.execute(f"SELECT login FROM users WHERE password = '{user_password}'")!= sql.execute(f"SELECT login FROM users WHERE login= '{user_login}'"):
+        if sql.execute(f"SELECT login FROM users WHERE password = '{user_password}'") != sql.execute(f"SELECT login FROM users WHERE login= '{user_login}'"):
             print()
             print("Not correct")
         else:
@@ -88,6 +98,8 @@ def casino():
                 sql.execute(f"SELECT cash FROM users WHERE login='{user_login}'")
                 if sql.fetchone()[0] <= 0:
                     print("Your balance is 0$.Your account will be deleted")
+                    sql.execute(f'UPDATE blacklist SET in_blacklist = {1} WHERE login = "{user_login}"')
+                    db_blacklist.commit()
                     delete_db()
 
 
