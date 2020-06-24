@@ -24,7 +24,10 @@ db.commit()
 def reg():
     users_login = input("Login: ")
     users_password = input("Password: ")
-    if sql_blacklist.execute(f"SELECT in_blacklist FROM blacklist WHERE login='user_login'") == 0:
+    sql_blacklist.execute(f"SELECT in_blacklist FROM blacklist WHERE login='{user_login}'")
+    count = sql_blacklist.fetchone()
+
+    if count is None:
         sql.execute(f"SELECT login FROM users WHERE login = '{users_login}'")
         if sql.fetchone() is None:
             sql.execute(f"INSERT INTO users VALUES(?, ?, ?)", (users_login, users_password, 100))
@@ -72,37 +75,42 @@ def casino():
     else:
         user_password = input("Enter password: ")#
 
-        if sql.execute(f"SELECT login FROM users WHERE password = '{user_password}'") != sql.execute(f"SELECT login FROM users WHERE login= '{user_login}'"):
-            print()
-            print("Not correct")
+
+        sql.execute(f"SELECT login FROM users WHERE password = '{user_password}'")
+        a = sql.fetchone()
+        user_l = tuple([user_login])
+
+        if a is None:
+            print("Not correct!!")
         else:
-            print("Playing game...")
-            for i in range(1, 4):
-                print(i)
-                time.sleep(1)
-
-            if number == 1:
-                prise_money = randint(0,100)
-                print("You won {} $!".format(prise_money))
-                sql.execute(f'UPDATE users SET cash = {prise_money + balance} WHERE login = "{user_login}"')
-                db.commit()
-
+            if a != user_l:
+                print("Not correct")
             else:
+                print("Playing game...")
+                for i in range(1, 4):
+                    print(i)
+                    time.sleep(1)
 
-                for i in sql.execute(f"SELECT cash FROM users WHERE login='{user_login}'"):
-                    lose_money = i[0] - randint(0, i[0])
-                print("You lose {}$ !".format(lose_money))
-                sql.execute(f'UPDATE users SET cash = {balance - lose_money} WHERE login = "{user_login}"')
-                db.commit()
+                if number == 1:
+                    prise_money = randint(0,100)
+                    print("You won {} $!".format(prise_money))
+                    sql.execute(f'UPDATE users SET cash = {prise_money + balance} WHERE login = "{user_login}"')
+                    db.commit()
 
-                sql.execute(f"SELECT cash FROM users WHERE login='{user_login}'")
-                if sql.fetchone()[0] <= 0:
-                    print("Your balance is 0$.Your account will be deleted")
-                    sql.execute(f'UPDATE blacklist SET in_blacklist = {1} WHERE login = "{user_login}"')
-                    db_blacklist.commit()
-                    delete_db()
+                else:
 
+                    for i in sql.execute(f"SELECT cash FROM users WHERE login='{user_login}'"):
+                        lose_money = i[0] - randint(0, i[0])
+                    print("You lose {}$ !".format(lose_money))
+                    sql.execute(f'UPDATE users SET cash = {balance - lose_money} WHERE login = "{user_login}"')
+                    db.commit()
 
+                    sql.execute(f"SELECT cash FROM users WHERE login='{user_login}'")
+                    if sql.fetchone()[0] <= 0:
+                        print("Your balance is 0$.Your account will be deleted")
+                        sql_blacklist.execute(f'UPDATE blacklist SET in_blacklist = {1} WHERE login = "{user_login}"')
+                        db_blacklist.commit()
+                        delete_db()
 
 
 casino()
